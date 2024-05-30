@@ -4,7 +4,7 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>com.laundromat</groupId>
-    <artifactId>laundromat-system</artifactId>
+    <artifactId>laundromat-operational-system</artifactId>
     <version>1.0-SNAPSHOT</version>
 
     <properties>
