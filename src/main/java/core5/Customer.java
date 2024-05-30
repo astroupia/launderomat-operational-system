@@ -42,7 +42,7 @@ public class Customer {
         } else if (service instanceof WetCleaningService) {
             System.out.println(((WetCleaningService) service).getWeight() + " kg");
         }
-        System.out.println("Total Price: " + service.getPrice() + " birr");
+        System.out.println("Total Price: " + service.getPrice() + " ETB");
     }
 
     public String getName() {
