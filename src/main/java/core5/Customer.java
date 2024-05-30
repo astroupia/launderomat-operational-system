@@ -1,5 +1,9 @@
 package core5;
 
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.Date;
 
 public class Customer {
@@ -19,14 +23,19 @@ public class Customer {
 
     public void registerService() {
         service.calculatePrice();
-        customerDAO.addCustomer(this);
-
         int customerId = getCustomerId(); // Retrieve customer ID from database
-        if (service instanceof DryCleaningService) {
-            serviceDAO.addDryCleaningService(customerId, (DryCleaningService) service);
-        } else if (service instanceof WetCleaningService) {
-            serviceDAO.addWetCleaningService(customerId, (WetCleaningService) service);
-        }
+
+    // Add customer to database
+    CustomerDAO customerDAO = new CustomerDAO();
+    customerDAO.addCustomer(this, customerId);
+
+    // Add service to database based on type
+    ServiceDAO serviceDAO = new ServiceDAO();
+    if (service instanceof DryCleaningService) {
+        serviceDAO.addDryCleaningService(customerId, (DryCleaningService) service);
+    } else if (service instanceof WetCleaningService) {
+        serviceDAO.addWetCleaningService(customerId, (WetCleaningService) service);
+    }
     }
 
     public void displayReceipt() {
@@ -35,6 +44,8 @@ public class Customer {
         System.out.println("Service Date: " + serviceDate);
         System.out.println("Delivery Date: " + deliveryDate);
         System.out.println("Items/Weight: ");
+
+        // Display service details based on type
         if (service instanceof DryCleaningService) {
             for (String item : ((DryCleaningService) service).listItems()) {
                 System.out.println(item);
@@ -42,9 +53,11 @@ public class Customer {
         } else if (service instanceof WetCleaningService) {
             System.out.println(((WetCleaningService) service).getWeight() + " kg");
         }
+
         System.out.println("Total Price: " + service.getPrice() + " ETB");
     }
 
+    // Getters for customer details
     public String getName() {
         return name;
     }
@@ -65,8 +78,34 @@ public class Customer {
         return service;
     }
 
+    // Method to retrieve customer ID (to be implemented)
     private int getCustomerId() {
-        // Retrieve customer ID from the database (implement logic here)
-        return 0;
+    Connection conn = null;
+    PreparedStatement stmt = null;
+    ResultSet rs = null;
+    int customerId = 0; // Default value if no customer ID found
+
+    try {
+        conn = DatabaseUtil.getConnection(); // Assuming this method returns a Connection
+        String sql = "SELECT customerId FROM customers WHERE name = ? AND serviceDate = ?";
+        stmt = conn.prepareStatement(sql);
+        stmt.setString(1, name); // Assuming 'name' is a field in Customer class
+        stmt.setDate(2, new java.sql.Date(serviceDate.getTime())); // Assuming 'serviceDate' is a field in Customer class
+        rs = stmt.executeQuery();
+
+        if (rs.next()) {
+            customerId = rs.getInt("customerId");
+        }
+    } catch (SQLException e) {
+        e.printStackTrace();
+        // Handle SQLException as needed
+    } finally {
+        DatabaseUtil.closeResultSet(rs);
+        DatabaseUtil.closeStatement(stmt);
+        DatabaseUtil.closeConnection(conn);
     }
+
+    return customerId;
 }
+    }
+
